@@ -7,21 +7,32 @@ interface TodoListProps {
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: Partial<Omit<Todo, 'id' | 'createdAt'>>) => void;
-  filter: 'all' | 'active' | 'completed';
+  filter: 'all' | 'active' | 'completed' | 'overdue';
 }
 
 export function TodoList({ todos, onToggle, onDelete, onUpdate, filter }: TodoListProps) {
+  const isOverdue = (todo: Todo) => {
+    if (!todo.dueDate || todo.completed) return false;
+    const due = new Date(todo.dueDate);
+    return due < new Date();
+  };
+
   const filteredTodos = todos.filter((todo) => {
     if (filter === 'active') return !todo.completed;
     if (filter === 'completed') return todo.completed;
+    if (filter === 'overdue') return isOverdue(todo);
     return true;
   });
 
   if (filteredTodos.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-400 text-lg">
-          {todos.length === 0 ? '📝 No tasks yet. Create one to get started!' : '✨ No tasks in this filter.'}
+        <p className="text-gray-400 dark:text-gray-500 text-lg">
+          {todos.length === 0
+            ? '📝 No tasks yet. Create one to get started!'
+            : filter === 'overdue'
+              ? '🎉 No overdue tasks!'
+              : '✨ No tasks in this filter.'}
         </p>
       </div>
     );

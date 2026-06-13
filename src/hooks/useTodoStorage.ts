@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Todo, TodoWithoutId } from '../types/Todo';
+import { Todo, TodoWithoutId, TodoCategory } from '../types/Todo';
 
 const STORAGE_KEY = 'todos';
 
@@ -14,7 +14,6 @@ export function useTodoStorage() {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
-          // Convert date strings back to Date objects
           const todos = parsed.map((todo: any) => ({
             ...todo,
             createdAt: new Date(todo.createdAt),
@@ -49,6 +48,10 @@ export function useTodoStorage() {
       title: data.title,
       description: data.description,
       completed: false,
+      category: data.category,
+      dueDate: data.dueDate,
+      priority: data.priority,
+      tags: data.tags || [],
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -92,6 +95,39 @@ export function useTodoStorage() {
     setTodos((prev) => prev.filter((todo) => !todo.completed));
   }, []);
 
+  const exportTodos = useCallback(() => {
+    const dataStr = JSON.stringify(todos, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `todos-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }, [todos]);
+
+  const importTodos = useCallback((file: File) => {
+    return new Promise<void>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const imported = JSON.parse(e.target?.result as string);
+          if (Array.isArray(imported)) {
+            const validTodos = imported.filter((todo: any) => todo.title && todo.id);
+            setTodos((prev) => [...validTodos, ...prev]);
+            resolve();
+          } else {
+            reject(new Error('Invalid file format'));
+          }
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsText(file);
+    });
+  }, []);
+
   return {
     todos,
     isLoaded,
@@ -100,5 +136,7 @@ export function useTodoStorage() {
     deleteTodo,
     toggleTodo,
     clearCompleted,
+    exportTodos,
+    importTodos,
   };
 }

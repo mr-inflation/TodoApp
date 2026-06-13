@@ -18,13 +18,17 @@ html, body, #root {
   -moz-osx-font-smoothing: grayscale;
 }
 
+html.dark {
+  color-scheme: dark;
+}
+
 button {
   cursor: pointer;
   border: none;
   font-family: inherit;
 }
 
-input, textarea {
+input, textarea, select {
   font-family: inherit;
 }
 
@@ -38,6 +42,10 @@ input, textarea {
   background: #f1f5f9;
 }
 
+::-webkit-scrollbar-track:dark {
+  background: #1f2937;
+}
+
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
@@ -45,4 +53,19 @@ input, textarea {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+::-webkit-scrollbar-thumb:dark {
+  background: #4b5563;
+}
+
+::-webkit-scrollbar-thumb:hover:dark {
+  background: #6b7280;
+}
+
+/* Smooth transitions */
+@layer components {
+  .transition-colors {
+    @apply transition-colors duration-200;
+  }
 }
